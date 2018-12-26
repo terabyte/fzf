@@ -67,8 +67,9 @@ bindkey '\ec' fzf-cd-widget
 fzf-history-widget() {
   local selected num
   setopt localoptions noglobsubst noposixbuiltins pipefail 2> /dev/null
-  selected=( $(fc -rl 1 |
-    FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort $FZF_CTRL_R_OPTS --query=${(qqq)LBUFFER} +m" $(__fzfcmd)) )
+  # get history, reverse so most recent entries are first, sort with uniq to throw away duplicates (but keep first entry which is entry with highest index because of our reverse sort), then resort the results by index so older entries are first, then pipe into fzf without --tac.  Tiebreak with most recent entries (end) then by length.
+  selected=( $(fc -l 1 | tac | sort -b -k2 -u | sort -nr |
+    FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS  -n2..,.. --tiebreak=end,index --bind=ctrl-r:toggle-sort $FZF_CTRL_R_OPTS --query=${(qqq)LBUFFER} +m" $(__fzfcmd)) )
   local ret=$?
   if [ -n "$selected" ]; then
     num=$selected[1]
